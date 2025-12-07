@@ -83,7 +83,7 @@ MAJOR.MINOR.PATCH
 
 👤 Author
 
-Salvatore cristsudo (az104tor)
+Salvatore Cristaudo (az104tor)
 
 📄 License
 
