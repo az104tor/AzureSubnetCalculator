@@ -88,3 +88,13 @@ Salvatore Cristaudo (az104tor)
 📄 License
 
 This project is licensed under the MIT License — feel free to use, modify, and distribute it.
+
+## v1.2.0 (2025-01-11)
+- Added validation for invalid CIDR prefixes outside /0–/32
+- Added Azure-specific validation for supported subnet masks (/8–/29)
+- Improved error handling
+- Updated documentation
+
+
+
+
