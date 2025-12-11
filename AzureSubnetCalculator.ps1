@@ -14,7 +14,7 @@
     - Optional hosts-to-CIDR recommendation
 
 .VERSION
-    1.0.0
+    1.2.0
 
 .AUTHOR
     Salvatore Cristaudo
@@ -23,7 +23,7 @@
     MIT License
 
 .LAST UPDATED
-    2025-12-07
+    2025-12-11
 
 .NOTES
     This script is designed for Azure subnetting rules (5 reserved IPs).
@@ -58,6 +58,19 @@ function Get-SubnetInfo {
     $parts = $CIDR.Split("/")
     $ipString = $parts[0]
     $prefix   = [int]$parts[1]
+   
+   # Validate prefix is a number
+if ($prefix -lt 0 -or $prefix -gt 32) {
+    Write-Host "`nERROR: CIDR prefix must be between 0 and 32." -ForegroundColor Red
+    exit
+}
+
+# Validate Azure-supported subnet sizes
+if ($prefix -lt 8 -or $prefix -gt 29) {
+    Write-Host "`nERROR: Azure only supports subnet masks from /8 to /29." -ForegroundColor Red
+    Write-Host "You entered: /$prefix`n" -ForegroundColor Yellow
+    exit
+}
 
     $ip = [System.Net.IPAddress]::Parse($ipString).GetAddressBytes()
 
