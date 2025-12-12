@@ -61,7 +61,7 @@ function Get-SubnetInfo {
    
    # Validate prefix is a number
 if ($prefix -lt 0 -or $prefix -gt 32) {
-    Write-Host "`nERROR: CIDR prefix must be between 0 and 32." -ForegroundColor Red
+    Write-Host "`nERROR: invalid CIDR prefix. Please refer RFC 4632 for attitional details." -ForegroundColor Red
     exit
 }
 
