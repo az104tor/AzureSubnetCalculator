@@ -15,7 +15,7 @@
     - Optional export of output to a text file
 
 .VERSION
-    1.4.0
+    1.3.0
 
 .AUTHOR
     Salvatore Cristaudo
