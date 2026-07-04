@@ -31,7 +31,7 @@
     Works on Windows, Linux, and macOS PowerShell.
 
 .EXAMPLE
-    ./Azure-Subnet-Calculator.ps1 -CIDR 10.0.0.0/24 -OutputFile report.txt
+    ./AzureSubnetCalculator.ps1 -CIDR 10.0.0.0/24 -OutputFile report.txt
 #>
 
 
