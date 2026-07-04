@@ -12,9 +12,10 @@
     - Azure-usable hosts count
     - Optional subnet splitting
     - Optional hosts-to-CIDR recommendation
+    - Optional export of output to a text file
 
 .VERSION
-    1.2.0
+    1.4.0
 
 .AUTHOR
     Salvatore Cristaudo
@@ -23,11 +24,14 @@
     MIT License
 
 .LAST UPDATED
-    2025-12-11
+    2026-07-04
 
 .NOTES
     This script is designed for Azure subnetting rules (5 reserved IPs).
     Works on Windows, Linux, and macOS PowerShell.
+
+.EXAMPLE
+    ./Azure-Subnet-Calculator.ps1 -CIDR 10.0.0.0/24 -OutputFile report.txt
 #>
 
 
@@ -40,7 +44,10 @@ param(
     [int]$HostsNeeded,
 
     [Parameter(Mandatory = $false)]
-    [int]$SplitSubnets
+    [int]$SplitSubnets,
+
+    [Parameter(Mandatory = $false)]
+    [string]$OutputFile
 )
 
 # ANSI Colors (Windows + Linux)
@@ -48,6 +55,32 @@ $Red   = "`e[31m"
 $Green = "`e[32m"
 $White = "`e[97m"
 $Reset = "`e[0m"
+
+# Buffer that collects a plain-text (color-free) copy of everything written,
+# so it can be saved to -OutputFile at the end.
+$Script:LogBuffer = New-Object System.Collections.Generic.List[string]
+
+# -------------------------
+# Function: Write to console (with color) and, if requested, to a log buffer (no color)
+# -------------------------
+function Write-Both {
+    param(
+        [string]$Text = "",
+        [string]$ForegroundColor
+    )
+
+    if ($ForegroundColor) {
+        Write-Host $Text -ForegroundColor $ForegroundColor
+    } else {
+        Write-Host $Text
+    }
+
+    if ($OutputFile) {
+        # Strip ANSI escape sequences before saving to file
+        $plain = $Text -replace "`e\[[0-9;]*m", ""
+        $Script:LogBuffer.Add($plain)
+    }
+}
 
 # -------------------------
 # Function: Calculate subnet info
@@ -61,14 +94,16 @@ function Get-SubnetInfo {
    
    # Validate prefix is a number
 if ($prefix -lt 0 -or $prefix -gt 32) {
-    Write-Host "`nERROR: invalid CIDR prefix. Please refer RFC 4632 for attitional details." -ForegroundColor Red
+    Write-Both "`nERROR: invalid CIDR prefix. Please refer RFC 4632 for attitional details." -ForegroundColor Red
+    Save-OutputFile
     exit
 }
 
 # Validate Azure-supported subnet sizes
 if ($prefix -lt 8 -or $prefix -gt 29) {
-    Write-Host "`nERROR: Azure only supports subnet masks from /8 to /29." -ForegroundColor Red
-    Write-Host "You entered: /$prefix`n" -ForegroundColor Yellow
+    Write-Both "`nERROR: Azure only supports subnet masks from /8 to /29." -ForegroundColor Red
+    Write-Both "You entered: /$prefix`n" -ForegroundColor Yellow
+    Save-OutputFile
     exit
 }
 
@@ -170,14 +205,29 @@ function Split-Subnet {
 }
 
 # -------------------------
+# Function: Save the log buffer to -OutputFile (if provided)
+# -------------------------
+function Save-OutputFile {
+    if ($OutputFile -and $Script:LogBuffer.Count -gt 0) {
+        try {
+            $Script:LogBuffer | Out-File -FilePath $OutputFile -Encoding UTF8
+            Write-Host ""
+            Write-Host "${White}Output saved to: ${Reset}$OutputFile"
+        } catch {
+            Write-Host "${Red}ERROR: Could not write to file '$OutputFile': $($_.Exception.Message)${Reset}"
+        }
+    }
+}
+
+# -------------------------
 # Main Logic
 # -------------------------
 
 # If HostsNeeded provided, recommend CIDR
 if ($HostsNeeded) {
     $recommendedPrefix = Recommend-CIDR -HostsNeeded $HostsNeeded
-    Write-Host ""
-    Write-Host "${White}CIDR Recommendation:${Reset} /$recommendedPrefix for $HostsNeeded hosts"
+    Write-Both ""
+    Write-Both "${White}CIDR Recommendation:${Reset} /$recommendedPrefix for $HostsNeeded hosts"
     $recommendedCIDR = "10.0.0.0/$recommendedPrefix"
     $data = Get-SubnetInfo -CIDR $recommendedCIDR
 }
@@ -189,39 +239,42 @@ elseif ($CIDR) {
 
 # Display main subnet info
 if ($data) {
-    Write-Host ""
-    Write-Host "${White}================ Azure Subnet Calculator ================${Reset}"
-    Write-Host ""
-    Write-Host "${White}Network Address:   ${Reset}$($data.NetworkAddress)"
-    Write-Host "${White}Broadcast Address: ${Reset}$($data.BroadcastAddress)"
-    Write-Host "${White}Subnet Mask:       ${Reset}$($data.SubnetMask)"
-    Write-Host "${White}Prefix:            ${Reset}/$($data.Prefix)"
-    Write-Host ""
-    Write-Host "${White}Azure Reserved IPs:${Reset}"
-    Write-Host "  ${Red}Gateway (.1):        $($data.AzureGatewayIP)${Reset}"
-    Write-Host "  ${Red}Reserved (.2):       $($data.AzureReservedIP2)${Reset}"
-    Write-Host "  ${Red}Reserved (.3):       $($data.AzureReservedIP3)${Reset}"
-    Write-Host ""
-    Write-Host "Usable Host Range: ${Green}$($data.UsableHostRange)${Reset}"
-    Write-Host "Azure Usable Hosts: ${Green}$($data.AzureUsableHosts)${Reset}"
-    Write-Host ""
-    Write-Host "${White}Total Hosts (raw): $($data.TotalHosts)${Reset}"
-    Write-Host ""
-    Write-Host "${White}===========================================================${Reset}"
+    Write-Both ""
+    Write-Both "${White}================ Azure Subnet Calculator ================${Reset}"
+    Write-Both ""
+    Write-Both "${White}Network Address:   ${Reset}$($data.NetworkAddress)"
+    Write-Both "${White}Broadcast Address: ${Reset}$($data.BroadcastAddress)"
+    Write-Both "${White}Subnet Mask:       ${Reset}$($data.SubnetMask)"
+    Write-Both "${White}Prefix:            ${Reset}/$($data.Prefix)"
+    Write-Both ""
+    Write-Both "${White}Azure Reserved IPs:${Reset}"
+    Write-Both "  ${Red}Gateway (.1):        $($data.AzureGatewayIP)${Reset}"
+    Write-Both "  ${Red}Reserved (.2):       $($data.AzureReservedIP2)${Reset}"
+    Write-Both "  ${Red}Reserved (.3):       $($data.AzureReservedIP3)${Reset}"
+    Write-Both ""
+    Write-Both "Usable Host Range: ${Green}$($data.UsableHostRange)${Reset}"
+    Write-Both "Azure Usable Hosts: ${Green}$($data.AzureUsableHosts)${Reset}"
+    Write-Both ""
+    Write-Both "${White}Total Hosts (raw): $($data.TotalHosts)${Reset}"
+    Write-Both ""
+    Write-Both "${White}===========================================================${Reset}"
 }
 
 # If SplitSubnets provided, split the subnet
 if ($SplitSubnets -and $data) {
-    Write-Host ""
-    Write-Host "${White}Splitting subnet $CIDR into $SplitSubnets subnets:${Reset}"
+    Write-Both ""
+    Write-Both "${White}Splitting subnet $CIDR into $SplitSubnets subnets:${Reset}"
     $subnets = Split-Subnet -CIDR $CIDR -NumberOfSubnets $SplitSubnets
     $count = 1
 foreach ($s in $subnets) {
-    Write-Host ""
-    Write-Host "${White}Subnet #${count}: $($s.NetworkAddress)/$($s.Prefix)${Reset}"
-    Write-Host "  ${Red}Reserved IPs: $($s.AzureGatewayIP), $($s.AzureReservedIP2), $($s.AzureReservedIP3)${Reset}"
-    Write-Host "  Usable Host Range: ${Green}$($s.UsableHostRange)${Reset}"
-    Write-Host "  Azure Usable Hosts: ${Green}$($s.AzureUsableHosts)${Reset}"
+    Write-Both ""
+    Write-Both "${White}Subnet #${count}: $($s.NetworkAddress)/$($s.Prefix)${Reset}"
+    Write-Both "  ${Red}Reserved IPs: $($s.AzureGatewayIP), $($s.AzureReservedIP2), $($s.AzureReservedIP3)${Reset}"
+    Write-Both "  Usable Host Range: ${Green}$($s.UsableHostRange)${Reset}"
+    Write-Both "  Azure Usable Hosts: ${Green}$($s.AzureUsableHosts)${Reset}"
     $count++
 }
 }
+
+# Save collected output to file, if requested
+Save-OutputFile
