@@ -37,7 +37,7 @@ This tool is designed to help cloud engineers, architects, students, and anyone 
 
 Clone the repository:
 ```bash
-git clone https://github.com/YOUR-USERNAME/AzureSubnetCalculator.git
+git clone https://github.com/az104tor/AzureSubnetCalculator.git
 cd AzureSubnetCalculator
 ```
 
@@ -47,22 +47,22 @@ cd AzureSubnetCalculator
 
 ### Basic calculation
 ```powershell
-./Azure-Subnet-Calculator.ps1 -CIDR 10.0.0.0/24
+./AzureSubnetCalculator.ps1 -CIDR 10.0.0.0/24
 ```
 
 ### With recommended CIDR for a given number of hosts
 ```powershell
-./Azure-Subnet-Calculator.ps1 -HostsNeeded 120
+./AzureSubnetCalculator.ps1 -HostsNeeded 120
 ```
 
 ### Split a larger subnet into smaller ones
 ```powershell
-./Azure-Subnet-Calculator.ps1 -CIDR 10.0.0.0/24 -SplitSubnets 4
+./AzureSubnetCalculator.ps1 -CIDR 10.0.0.0/24 -SplitSubnets 4
 ```
 
 ### Save the output to a text file
 ```powershell
-./Azure-Subnet-Calculator.ps1 -CIDR 10.0.0.0/24 -OutputFile report.txt
+./AzureSubnetCalculator.ps1 -CIDR 10.0.0.0/24 -OutputFile report.txt
 ```
 
 You can combine `-OutputFile` with any of the other options — the console output is unchanged (colors and all), while a clean, plain-text copy is written to the specified file.
