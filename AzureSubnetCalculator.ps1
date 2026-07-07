@@ -1,3 +1,8 @@
+# AzureSubnetCalculator
+# Author: Salvatore Cristaudo
+# Copyright (c) 2026 - MIT License
+# Link: https://github.com/az104tor/AzureSubnetCalculator
+# Post: https://netoncloud.com/azure-subnet-calculator/
 <#
 .SYNOPSIS
     Azure Subnet Calculator for PowerShell
