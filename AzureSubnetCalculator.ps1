@@ -137,23 +137,26 @@ if ($prefix -lt 8 -or $prefix -gt 29) {
     $hostBits = 32 - $prefix
     $totalHosts = [math]::Pow(2, $hostBits)
 
-    # Azure usable hosts
+  # Azure usable hosts
     if ($prefix -ge 30) {
         $azureUsableHosts = 0
         $usableRange = "Not usable in Azure (/30, /31, /32)"
     } else {
         $azureUsableHosts = $totalHosts - 5
-        $firstIP = $networkBytes.Clone(); $firstIP[3] = 4
+        $firstIP = $networkBytes.Clone(); $firstIP[3] = $networkBytes[3] + 4
         $lastIP  = $broadcastBytes.Clone(); $lastIP[3]--
         $firstUsable = [System.Net.IPAddress]::new($firstIP)
         $lastUsable  = [System.Net.IPAddress]::new($lastIP)
         $usableRange = "$firstUsable - $lastUsable"
     }
 
-    # Azure reserved IPs
-    $az1 = [System.Net.IPAddress]::new(($networkBytes[0..2] + @(1)))
-    $az2 = [System.Net.IPAddress]::new(($networkBytes[0..2] + @(2)))
-    $az3 = [System.Net.IPAddress]::new(($networkBytes[0..2] + @(3)))
+    # Azure reserved IPs (relative to the actual network address, not hardcoded)
+    $az1Bytes = $networkBytes.Clone(); $az1Bytes[3] = $networkBytes[3] + 1
+    $az2Bytes = $networkBytes.Clone(); $az2Bytes[3] = $networkBytes[3] + 2
+    $az3Bytes = $networkBytes.Clone(); $az3Bytes[3] = $networkBytes[3] + 3
+    $az1 = [System.Net.IPAddress]::new($az1Bytes)
+    $az2 = [System.Net.IPAddress]::new($az2Bytes)
+    $az3 = [System.Net.IPAddress]::new($az3Bytes)
 
     return [PSCustomObject]@{
         NetworkAddress   = $network.IPAddressToString
