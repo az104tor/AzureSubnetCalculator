@@ -20,7 +20,7 @@
     - Optional export of output to a text file
 
 .VERSION
-    1.3.0
+    1.4.0
 
 .AUTHOR
     Salvatore Cristaudo
@@ -29,7 +29,7 @@
     MIT License
 
 .LAST UPDATED
-    2026-07-04
+    2026-08-08
 
 .NOTES
     This script is designed for Azure subnetting rules (5 reserved IPs).
